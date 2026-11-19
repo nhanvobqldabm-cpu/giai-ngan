@@ -58,7 +58,8 @@ textarea{resize:vertical;min-height:72px;font-size:14px;line-height:1.4}
 .minus{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--danger);background:transparent;color:var(--danger);font-size:20px;line-height:1;cursor:pointer;padding:0}
 .minus.arm{background:var(--danger);color:#fff;width:auto;padding:0 10px;border-radius:15px;font-size:13px;font-weight:600}
 tr.det>td{background:var(--ro);padding:14px 16px}
-.dg{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px}
+.dg{display:grid;grid-template-columns:1fr;gap:20px}
+.dg>div+div{display:none}
 @media (max-width:860px){.dg{grid-template-columns:1fr}}
 .dg h3{margin:0 0 8px;font-size:14.5px}
 .sub{min-width:0;width:100%;font-size:14px}
@@ -107,8 +108,8 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
     var m=p.members.filter(function(x){return(x.email||"").toLowerCase()===email})[0];
     return m?m.role:null;
   }
-  function can(p,k){var r=roleOf(p);if(r==="bgd")return true;return k==="fin"?r==="ketoan":k==="prog"?r==="giamsat":false}
-  var anyBgd=function(){return isAdmin||projects.some(function(p){return roleOf(p)==="bgd"})};
+  function can(){return true}
+  var anyBgd=function(){return true};
 
   function norm(id,d){
     return{id:id,name:d.name||"",total:+d.total||0,start:d.start||"",end:d.end||"",progress:+d.progress||0,doing:d.doing||"",next:d.next||"",t:d.t||0,
@@ -125,7 +126,7 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
   function row(p,i){
     var s=sums(p),r=roleOf(p),multi=p.sources.length>1,s0=p.sources[0]||{id:""};
     var all=can(p,"all"),fin=can(p,"fin"),prog=can(p,"prog");
-    var rl=r?'<div class="role ok">Vai trò của bạn: '+ROLES[r]+'</div>':'<div class="role">Chỉ xem</div>';
+    var rl='';
     var src=multi?'<button class="tg" data-a="tg" data-pid="'+p.id+'">'+(open[p.id]?"▾":"▸")+' '+p.sources.length+' nguồn vốn</button>'
       :'<input data-f="sname" data-pid="'+p.id+'" data-sid="'+s0.id+'" value="'+esc(s0.name)+'"'+(all?"":" readonly")+'>';
     var plan=multi||!s0.id?'<b>'+fmt(s.plan)+'</b>':'<input class="num" data-f="plan" data-pid="'+p.id+'" data-sid="'+s0.id+'" inputmode="numeric" value="'+fmt(s0.plan)+'"'+(fin?"":" readonly")+'>';
@@ -133,7 +134,7 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
     var gn=ratio(s.disb,s.plan);
     var h='<tr><td class="c">'+(i+1)+'</td>'
       +'<td>'+inp("nm","name",p.name,all,p,'placeholder="Tên dự án"')+rl
-      +'<button class="tg" data-a="tg" data-pid="'+p.id+'">'+(open[p.id]?"▾ Thu gọn":"▸ Chi tiết và phân quyền")+'</button></td>'
+      +'<button class="tg" data-a="tg" data-pid="'+p.id+'">'+(open[p.id]?"▾ Thu gọn":"▸ Chi tiết nguồn vốn")+'</button></td>'
       +'<td>'+src+'</td>'
       +'<td>'+inp("num","total",fmt(p.total),all,p,'inputmode="numeric"')+'</td>'
       
@@ -144,7 +145,7 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
       +'<td><div class="date"><label>Từ <input type="date" data-f="start" data-pid="'+p.id+'" value="'+esc(p.start)+'"'+(all?"":" readonly")+'></label>'
       +'<label>Đến <input type="date" data-f="end" data-pid="'+p.id+'" value="'+esc(p.end)+'"'+(all?"":" readonly")+'></label></div></td>'
       +'<td>'+ta("doing",p.doing,prog,p)+'</td><td>'+ta("next",p.next,prog,p)+'</td>'
-      +'<td class="c">'+(r==="bgd"?'<button class="minus'+(armed===p.id?" arm":"")+'" data-a="delp" data-pid="'+p.id+'" title="Xóa dự án" aria-label="Xóa dự án">'+(armed===p.id?"Xóa?":"−")+'</button>':"")+'</td></tr>';
+      +'<td class="c">'+(true?'<button class="minus'+(armed===p.id?" arm":"")+'" data-a="delp" data-pid="'+p.id+'" title="Xóa dự án" aria-label="Xóa dự án">'+(armed===p.id?"Xóa?":"−")+'</button>':"")+'</td></tr>';
     if(open[p.id])h+=detail(p,all,fin);
     return h;
   }
@@ -177,7 +178,7 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
   function render(){
     pending=false;
     var role=$("#who");
-    role.innerHTML=email?'Đăng nhập: <b>'+esc(email)+'</b>'+(isAdmin?'<br>Ban giám đốc (toàn quyền)':""):'Không xác định được email của bạn.<br>Bạn chỉ xem được dữ liệu.';
+    role.innerHTML=email?'Đăng nhập: <b>'+esc(email)+'</b>':"";
     $("#addp").hidden=!(db&&loaded&&anyBgd());
     if(!db){app.innerHTML='<div class="msg err">Cần mở trang này trong Claude và đăng nhập để xem dữ liệu.</div>';return}
     if(errMsg){app.innerHTML='<div class="msg err">'+esc(errMsg)+'</div>';return}
@@ -250,7 +251,7 @@ tfoot td{background:var(--total);font-weight:700;border-top:2px solid var(--acce
   $("#addp").addEventListener("click",function(){
     var d={name:"Dự án mới",total:0,start:"",end:"",progress:0,t:Date.now(),
       sources:{s1:{name:"Ngân sách",plan:0,disb:0,t:1}},members:{}};
-    if(!isAdmin&&email)d.members={m1:{email:email,role:"bgd",t:1}};
+    
     db.collection("projects").add(d).catch(fail);
   });
 
